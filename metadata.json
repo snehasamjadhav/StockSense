@@ -1,0 +1,6 @@
+{
+  "name": "StockSense ERP",
+  "description": "Enterprise-grade Inventory Management System (IMS) with double-entry stock accounting, warehouse & location tracing, document validation workflows, and real-time ledger.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
