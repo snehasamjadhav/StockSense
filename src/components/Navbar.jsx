@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Search, Bell, User, Check, PlayCircle, ExternalLink, HelpCircle, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Bell, User, Check, PlayCircle, ExternalLink, HelpCircle, LogOut, Scan } from 'lucide-react';
 import { mockInventoryService } from '../services/mockInventoryService.js';
 import { INITIAL_PERSONAS } from '../services/mockData.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 
-export const Navbar = ({ onOpenScenarioModal, onShowToast, onSearchQuery }) => {
+export const Navbar = ({ onOpenScenarioModal, onOpenScanner, onShowToast, onSearchQuery }) => {
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +14,18 @@ export const Navbar = ({ onOpenScenarioModal, onShowToast, onSearchQuery }) => {
   const navigate = useNavigate();
 
   const currentUser = authUser || mockInventoryService.getCurrentUser();
+
+  // Global hotkey: Shift + S to trigger Barcode Scanner
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.shiftKey && (e.key === 'S' || e.key === 's') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        if (onOpenScanner) onOpenScanner();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpenScanner]);
 
   const handleSelectPersona = (role) => {
     mockInventoryService.setPersona(role);
@@ -57,6 +69,19 @@ export const Navbar = ({ onOpenScenarioModal, onShowToast, onSearchQuery }) => {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 md:gap-3">
+        {/* Optical Barcode & QR Scanner Button */}
+        <button
+          onClick={onOpenScanner}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-200 transition-colors shadow-xs"
+          title="Open Optical Barcode / QR Scanner (Shift + S)"
+        >
+          <Scan className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="hidden sm:inline">Scan Barcode</span>
+          <span className="hidden md:inline text-[9px] font-mono text-slate-400 bg-white px-1 rounded border border-slate-200">
+            ⇧S
+          </span>
+        </button>
+
         {/* Interactive Scenario Walkthrough Runner */}
         <button
           onClick={onOpenScenarioModal}

@@ -18,6 +18,7 @@ import { ScenarioModal } from './components/ScenarioModal.jsx';
 import { DashboardView } from './views/DashboardView.jsx';
 import { ProductsView } from './views/ProductsView.jsx';
 import { CategoriesView } from './views/CategoriesView.jsx';
+import { PurchaseOrdersView } from './views/PurchaseOrdersView.jsx';
 import { ReceiptsView } from './views/ReceiptsView.jsx';
 import { DeliveriesView } from './views/DeliveriesView.jsx';
 import { TransfersView } from './views/TransfersView.jsx';
@@ -30,9 +31,10 @@ import { ReportsView } from './views/ReportsView.jsx';
 import { AuditLogsView } from './views/AuditLogsView.jsx';
 import { SettingsView } from './views/SettingsView.jsx';
 import { ProfileView } from './views/ProfileView.jsx';
+import { BarcodeScannerModal } from './components/BarcodeScannerModal.jsx';
 
 // Authenticated ERP Shell Layout
-const ErpShell = ({ children, onShowToast, onOpenScenarioModal }) => {
+const ErpShell = ({ children, onShowToast, onOpenScenarioModal, onOpenScanner }) => {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white text-slate-900 font-sans antialiased">
       {/* Sidebar Navigation */}
@@ -46,6 +48,7 @@ const ErpShell = ({ children, onShowToast, onOpenScenarioModal }) => {
         {/* Top Navbar */}
         <Navbar
           onOpenScenarioModal={onOpenScenarioModal}
+          onOpenScanner={onOpenScanner}
           onShowToast={onShowToast}
         />
 
@@ -59,8 +62,28 @@ const ErpShell = ({ children, onShowToast, onOpenScenarioModal }) => {
 };
 
 // Main App Router Component
-function MainAppRoutes({ toasts, showToast, dismissToast, isScenarioModalOpen, setIsScenarioModalOpen }) {
+function MainAppRoutes({
+  toasts,
+  showToast,
+  dismissToast,
+  isScenarioModalOpen,
+  setIsScenarioModalOpen,
+  isScannerOpen,
+  setIsScannerOpen
+}) {
   const { isAuthenticated } = useAuth();
+
+  const wrapWithShell = (view) => (
+    <ProtectedRoute>
+      <ErpShell
+        onShowToast={showToast}
+        onOpenScenarioModal={() => setIsScenarioModalOpen(true)}
+        onOpenScanner={() => setIsScannerOpen(true)}
+      >
+        {view}
+      </ErpShell>
+    </ProtectedRoute>
+  );
 
   return (
     <>
@@ -104,173 +127,87 @@ function MainAppRoutes({ toasts, showToast, dismissToast, isScenarioModalOpen, s
         {/* Protected ERP Dashboard & Modules */}
         <Route
           path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <ErpShell
-                onShowToast={showToast}
-                onOpenScenarioModal={() => setIsScenarioModalOpen(true)}
-              >
-                <DashboardView
-                  onShowToast={showToast}
-                  onOpenScenarioModal={() => setIsScenarioModalOpen(true)}
-                />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(
+            <DashboardView
+              onShowToast={showToast}
+              onOpenScenarioModal={() => setIsScenarioModalOpen(true)}
+            />
+          )}
         />
 
         <Route
           path="/products"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <ProductsView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<ProductsView onShowToast={showToast} />)}
         />
 
         <Route
           path="/categories"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <CategoriesView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<CategoriesView onShowToast={showToast} />)}
+        />
+
+        <Route
+          path="/purchase-orders"
+          element={wrapWithShell(<PurchaseOrdersView onShowToast={showToast} />)}
         />
 
         <Route
           path="/receipts"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <ReceiptsView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<ReceiptsView onShowToast={showToast} />)}
         />
 
         <Route
           path="/deliveries"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <DeliveriesView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<DeliveriesView onShowToast={showToast} />)}
         />
 
         <Route
           path="/transfers"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <TransfersView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<TransfersView onShowToast={showToast} />)}
         />
 
         <Route
           path="/adjustments"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <AdjustmentsView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<AdjustmentsView onShowToast={showToast} />)}
         />
 
         <Route
           path="/inventory"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <InventoryView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<InventoryView onShowToast={showToast} />)}
         />
 
         <Route
           path="/ledger"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <StockLedgerView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<StockLedgerView onShowToast={showToast} />)}
         />
 
         <Route
           path="/warehouses"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <WarehousesView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<WarehousesView onShowToast={showToast} />)}
         />
 
         <Route
           path="/reordering"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <ReorderingView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<ReorderingView onShowToast={showToast} />)}
         />
 
         <Route
           path="/reports"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <ReportsView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<ReportsView onShowToast={showToast} />)}
         />
 
         <Route
           path="/audit-logs"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <AuditLogsView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<AuditLogsView onShowToast={showToast} />)}
         />
 
         <Route
           path="/settings"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <SettingsView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<SettingsView onShowToast={showToast} />)}
         />
 
         <Route
           path="/profile"
-          element={
-            <ProtectedRoute>
-              <ErpShell onShowToast={showToast} onOpenScenarioModal={() => setIsScenarioModalOpen(true)}>
-                <ProfileView onShowToast={showToast} />
-              </ErpShell>
-            </ProtectedRoute>
-          }
+          element={wrapWithShell(<ProfileView onShowToast={showToast} />)}
         />
 
         {/* Fallback Catch-all: Unauthenticated -> Login (/), Authenticated -> Dashboard */}
@@ -287,6 +224,13 @@ function MainAppRoutes({ toasts, showToast, dismissToast, isScenarioModalOpen, s
         onShowToast={showToast}
       />
 
+      {/* Optical Barcode & QR Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onShowToast={showToast}
+      />
+
       {/* Floating System Notification Toasts */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
     </>
@@ -296,6 +240,7 @@ function MainAppRoutes({ toasts, showToast, dismissToast, isScenarioModalOpen, s
 export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const showToast = (message, type = 'info', details = '') => {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -318,6 +263,8 @@ export default function App() {
         dismissToast={dismissToast}
         isScenarioModalOpen={isScenarioModalOpen}
         setIsScenarioModalOpen={setIsScenarioModalOpen}
+        isScannerOpen={isScannerOpen}
+        setIsScannerOpen={setIsScannerOpen}
       />
     </AuthProvider>
   );
