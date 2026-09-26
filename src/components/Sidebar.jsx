@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   ArrowLeftRight,
   ClipboardCheck,
+  ShoppingCart,
   Package,
   BookOpen,
   Building2,
@@ -137,6 +138,7 @@ export const Sidebar = ({ onResetData, onShowToast }) => {
         ])}
 
         {navSection('OPERATIONS', [
+          { to: '/purchase-orders', label: 'Purchase Orders', icon: ShoppingCart },
           { to: '/receipts', label: 'Receipts', icon: ArrowDownLeft },
           { to: '/deliveries', label: 'Delivery Orders', icon: ArrowUpRight },
           { to: '/transfers', label: 'Internal Transfers', icon: ArrowLeftRight },

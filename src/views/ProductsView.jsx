@@ -8,9 +8,13 @@ import {
   X,
   AlertCircle,
   PackageCheck,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  Upload
 } from 'lucide-react';
 import { mockInventoryService } from '../services/mockInventoryService.js';
+import { exportToCSV, formatCurrency } from '../utils/exportUtils.js';
+import { BulkImportModal } from '../components/BulkImportModal.jsx';
 
 export const ProductsView = ({ onShowToast }) => {
   const [products, setProducts] = useState([]);
@@ -19,6 +23,8 @@ export const ProductsView = ({ onShowToast }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [tableDensity, setTableDensity] = useState('comfortable');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -74,24 +80,64 @@ export const ProductsView = ({ onShowToast }) => {
     }
   };
 
+  const handleExportCSV = () => {
+    const columns = [
+      { key: 'name', label: 'Product Name' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'categoryName', label: 'Category' },
+      { key: 'stock', label: 'Total Stock' },
+      { key: 'available', label: 'Available' },
+      { key: 'uom', label: 'UOM' },
+      { key: 'unitCost', label: 'Unit Cost' },
+      { key: 'minStock', label: 'Min Safety Stock' },
+      { key: 'maxStock', label: 'Max Stock' },
+      { key: 'reorderQty', label: 'Reorder Qty' },
+      { key: 'status', label: 'Stock Status' }
+    ];
+    exportToCSV('Product_Catalog', columns, products);
+    onShowToast('Exported Product Catalog to CSV', 'info');
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Products Catalog</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Products Catalog</h1>
+            <span className="text-[11px] font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+              Master Inventory Index
+            </span>
+          </div>
           <p className="text-xs text-slate-500 mt-0.5">Master product index with real-time on-hand balances</p>
         </div>
-        <button
-          onClick={() => {
-            setFormData(prev => ({ ...prev, categoryId: categories[0]?.id || '' }));
-            setShowNewModal(true);
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-md shadow-xs transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Product</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold rounded-md shadow-xs transition-colors"
+            title="Import multiple products via CSV"
+          >
+            <Upload className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Bulk CSV Import</span>
+          </button>
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-md shadow-xs transition-colors"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            onClick={() => {
+              setFormData(prev => ({ ...prev, categoryId: categories[0]?.id || '' }));
+              setShowNewModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-md shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Product</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters Bar */}
@@ -119,6 +165,21 @@ export const ProductsView = ({ onShowToast }) => {
               <option key={c.id} value={c.id}>{c.name} ({c.count})</option>
             ))}
           </select>
+
+          <div className="flex items-center border border-slate-200 rounded p-0.5 text-[11px] text-slate-600 ml-2">
+            <button
+              onClick={() => setTableDensity('comfortable')}
+              className={`px-2 py-0.5 rounded ${tableDensity === 'comfortable' ? 'bg-slate-200 font-semibold text-slate-900' : 'hover:bg-slate-100'}`}
+            >
+              Comfortable
+            </button>
+            <button
+              onClick={() => setTableDensity('compact')}
+              className={`px-2 py-0.5 rounded ${tableDensity === 'compact' ? 'bg-slate-200 font-semibold text-slate-900' : 'hover:bg-slate-100'}`}
+            >
+              Compact
+            </button>
+          </div>
         </div>
       </div>
 
@@ -126,23 +187,25 @@ export const ProductsView = ({ onShowToast }) => {
       <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+            <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
               <tr>
                 <th className="py-2.5 px-4">Product</th>
                 <th className="py-2.5 px-4">SKU</th>
                 <th className="py-2.5 px-4">Category</th>
-                <th className="py-2.5 px-4">Stock</th>
-                <th className="py-2.5 px-4">Available</th>
-                <th className="py-2.5 px-4">Reorder Level</th>
+                <th className="py-2.5 px-4 text-right">Stock</th>
+                <th className="py-2.5 px-4 text-right">Available</th>
+                <th className="py-2.5 px-4 text-right">Reorder Level</th>
                 <th className="py-2.5 px-4">Status</th>
                 <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {products.map(prod => {
-                let statusBadge = 'bg-emerald-100 text-emerald-800';
-                if (prod.status === 'LOW_STOCK') statusBadge = 'bg-amber-100 text-amber-800';
-                if (prod.status === 'OUT_OF_STOCK') statusBadge = 'bg-rose-100 text-rose-800';
+                let statusColor = 'text-emerald-700 border-emerald-200 bg-emerald-50/50';
+                if (prod.status === 'LOW_STOCK') statusColor = 'text-amber-700 border-amber-200 bg-amber-50/50';
+                if (prod.status === 'OUT_OF_STOCK') statusColor = 'text-rose-700 border-rose-200 bg-rose-50/50';
+
+                const rowPadding = tableDensity === 'compact' ? 'py-1.5' : 'py-3';
 
                 return (
                   <tr
@@ -150,24 +213,24 @@ export const ProductsView = ({ onShowToast }) => {
                     onClick={() => setSelectedProduct(prod)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   >
-                    <td className="py-3 px-4 font-semibold text-slate-900">{prod.name}</td>
-                    <td className="py-3 px-4 font-mono text-indigo-700 font-bold">{prod.sku}</td>
-                    <td className="py-3 px-4 text-slate-600">{prod.categoryName}</td>
-                    <td className="py-3 px-4 font-mono font-bold text-slate-900">
+                    <td className={`${rowPadding} px-4 font-semibold text-slate-900`}>{prod.name}</td>
+                    <td className={`${rowPadding} px-4 font-mono text-indigo-700 font-bold`}>{prod.sku}</td>
+                    <td className={`${rowPadding} px-4 text-slate-600`}>{prod.categoryName}</td>
+                    <td className={`${rowPadding} px-4 text-right font-mono font-bold text-slate-900 tabular-nums`}>
                       {prod.stock} <span className="text-slate-400 font-normal">{prod.uom}</span>
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-slate-700">
+                    <td className={`${rowPadding} px-4 text-right font-mono font-bold text-slate-700 tabular-nums`}>
                       {prod.available} <span className="text-slate-400 font-normal">{prod.uom}</span>
                     </td>
-                    <td className="py-3 px-4 font-mono text-slate-500">
+                    <td className={`${rowPadding} px-4 text-right font-mono text-slate-500 tabular-nums`}>
                       {prod.minStock} {prod.uom}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadge}`}>
+                    <td className={`${rowPadding} px-4`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${statusColor}`}>
                         {prod.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className={`${rowPadding} px-4 text-right`}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -364,6 +427,14 @@ export const ProductsView = ({ onShowToast }) => {
           </form>
         </div>
       )}
+
+      {/* Bulk CSV Import Modal */}
+      <BulkImportModal
+        isOpen={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        onShowToast={onShowToast}
+        onImportSuccess={() => loadData()}
+      />
     </div>
   );
 };

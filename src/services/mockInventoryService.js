@@ -8,6 +8,7 @@ import {
   INITIAL_CATEGORIES,
   INITIAL_PRODUCTS,
   INITIAL_STOCK_BALANCES,
+  INITIAL_PURCHASE_ORDERS,
   INITIAL_RECEIPTS,
   INITIAL_DELIVERIES,
   INITIAL_TRANSFERS,
@@ -16,7 +17,7 @@ import {
   INITIAL_AUDIT_LOGS
 } from './mockData.js';
 
-const STORAGE_KEY = 'stocksense_erp_state_v2';
+const STORAGE_KEY = 'stocksense_erp_state_v3';
 
 function getDefaultState() {
   return {
@@ -27,6 +28,7 @@ function getDefaultState() {
     categories: INITIAL_CATEGORIES,
     products: INITIAL_PRODUCTS,
     balances: JSON.parse(JSON.stringify(INITIAL_STOCK_BALANCES)),
+    purchaseOrders: JSON.parse(JSON.stringify(INITIAL_PURCHASE_ORDERS)),
     receipts: INITIAL_RECEIPTS,
     deliveries: INITIAL_DELIVERIES,
     transfers: INITIAL_TRANSFERS,
@@ -46,7 +48,11 @@ class MockInventoryService {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (!parsed.purchaseOrders) {
+          parsed.purchaseOrders = JSON.parse(JSON.stringify(INITIAL_PURCHASE_ORDERS));
+        }
+        return parsed;
       }
     } catch (e) {
       console.warn('Could not read from localStorage, using default state', e);

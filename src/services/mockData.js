@@ -56,6 +56,8 @@ export const INITIAL_LOCATIONS = [
   { id: 'loc-prod-rack', warehouseId: 'wh-prod', name: 'Production Rack', code: 'PRD-RACK', type: 'internal', description: 'Work-in-progress floor stock' },
   { id: 'loc-fg', warehouseId: 'wh-prod', name: 'Finished Goods', code: 'FG-01', type: 'internal', description: 'Packaged stock ready for fulfillment' },
   // Virtual external partners
+  { id: 'loc-transit', warehouseId: 'virtual', name: 'In-Transit Fleet / Virtual Corridor', code: 'TR-TRANSIT', type: 'transit', description: 'Materials in logistics transit between facilities' },
+  { id: 'loc-staging', warehouseId: 'wh-main', name: 'Dock Staging Bay', code: 'STG-01', type: 'internal', description: 'Outbound/Inbound staging dock' },
   { id: 'loc-supplier', warehouseId: 'virtual', name: 'Supplier Partner', code: 'SUPPLIER', type: 'supplier', description: 'External vendor source' },
   { id: 'loc-customer', warehouseId: 'virtual', name: 'Customer Outbound', code: 'CUSTOMER', type: 'customer', description: 'Client dispatch destination' },
   { id: 'loc-loss', warehouseId: 'virtual', name: 'Inventory Adjustment Loss', code: 'LOSS-ADJ', type: 'inventory_loss', description: 'Inventory cycle count offset' }
@@ -205,6 +207,60 @@ export const INITIAL_STOCK_BALANCES = {
   }
 };
 
+export const INITIAL_PURCHASE_ORDERS = [
+  {
+    id: 'po-001',
+    reference: 'PO/2026/0101',
+    supplier: 'Global Metallics Ltd',
+    warehouseId: 'wh-main',
+    destinationLocationId: 'loc-rec',
+    productId: 'prod-steel',
+    quantity: 150,
+    uom: 'KG',
+    unitCost: 12.50,
+    totalAmount: 1875.00,
+    status: 'CONFIRMED',
+    date: '2026-09-24',
+    expectedDate: '2026-09-28',
+    operator: 'Elena Rostova',
+    notes: 'Bulk raw steel replenishment requisition'
+  },
+  {
+    id: 'po-002',
+    reference: 'PO/2026/0102',
+    supplier: 'Apex Alloys Corp',
+    warehouseId: 'wh-main',
+    destinationLocationId: 'loc-rec',
+    productId: 'prod-al',
+    quantity: 60,
+    uom: 'KG',
+    unitCost: 24.00,
+    totalAmount: 1440.00,
+    status: 'DRAFT',
+    date: '2026-09-25',
+    expectedDate: '2026-09-30',
+    operator: 'Marcus Vance',
+    notes: 'Low stock safety reorder batch'
+  },
+  {
+    id: 'po-003',
+    reference: 'PO/2026/0099',
+    supplier: 'EcoPack Industrial',
+    warehouseId: 'wh-main',
+    destinationLocationId: 'loc-rec',
+    productId: 'prod-box',
+    quantity: 500,
+    uom: 'PCS',
+    unitCost: 1.20,
+    totalAmount: 600.00,
+    status: 'RECEIVED',
+    date: '2026-09-20',
+    expectedDate: '2026-09-23',
+    operator: 'Elena Rostova',
+    notes: 'Quarterly packaging restock fulfilled'
+  }
+];
+
 export const INITIAL_RECEIPTS = [
   {
     id: 'rec-001',
@@ -285,6 +341,7 @@ export const INITIAL_TRANSFERS = [
   {
     id: 'int-001',
     reference: 'INT/2026/0001',
+    routeType: 'DIRECT',
     sourceWarehouseId: 'wh-main',
     sourceLocationId: 'loc-rec',
     destWarehouseId: 'wh-main',
@@ -300,6 +357,7 @@ export const INITIAL_TRANSFERS = [
   {
     id: 'int-002',
     reference: 'INT/2026/0002',
+    routeType: 'DIRECT',
     sourceWarehouseId: 'wh-prod',
     sourceLocationId: 'loc-prod-rack',
     destWarehouseId: 'wh-prod',
@@ -311,6 +369,30 @@ export const INITIAL_TRANSFERS = [
     date: '2026-09-24',
     operator: 'Marcus Vance',
     notes: 'Assembly line completion to finished inventory'
+  },
+  {
+    id: 'int-003',
+    reference: 'TRF/2026/0105',
+    routeType: 'MULTI_STEP',
+    sourceWarehouseId: 'wh-main',
+    sourceLocationId: 'loc-rack-a',
+    destWarehouseId: 'wh-prod',
+    destLocationId: 'loc-fg',
+    productId: 'prod-steel',
+    quantity: 25,
+    uom: 'KG',
+    status: 'IN_TRANSIT',
+    currentStep: 2,
+    carrier: 'Apex Logistics Freight Line (Truck #FL-108)',
+    trackingNumber: 'TRK-994821',
+    steps: [
+      { step: 1, name: 'Pick & Outbound Freight Dispatch', location: 'Rack A -> In-Transit Fleet', status: 'COMPLETED', timestamp: '2026-09-25 09:30', operator: 'Devon Reed' },
+      { step: 2, name: 'Destination Arrival & Dock Staging', location: 'In-Transit Fleet -> Production Staging', status: 'PENDING', timestamp: null, operator: null },
+      { step: 3, name: 'Final Putaway to Finished Goods Bin', location: 'Production Staging -> Finished Goods', status: 'PENDING', timestamp: null, operator: null }
+    ],
+    date: '2026-09-25',
+    operator: 'Devon Reed',
+    notes: 'Priority multi-warehouse raw material replenishment'
   }
 ];
 
